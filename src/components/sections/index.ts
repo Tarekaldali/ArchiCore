@@ -1,0 +1,5 @@
+export { Hero } from './Hero'
+export { BrandIntro } from './BrandIntro'
+export { FeaturedProjects } from './FeaturedProjects'
+export { Statistics } from './Statistics'
+export { CallToAction } from './CallToAction'
