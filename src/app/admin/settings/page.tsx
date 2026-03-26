@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
+import { useToast } from '@/components/ui/Toast'
 import { Save, RefreshCw, CheckCircle } from 'lucide-react'
 
 interface SiteSettings {
@@ -21,6 +22,7 @@ interface SiteSettings {
 }
 
 export default function SettingsPage() {
+  const toast = useToast()
   const [settings, setSettings] = React.useState<SiteSettings>({
     siteName: '',
     siteDescription: '',
@@ -68,13 +70,14 @@ export default function SettingsPage() {
 
       if (response.ok) {
         setSaved(true)
+        toast.success('Settings saved successfully!')
         setTimeout(() => setSaved(false), 3000)
       } else {
-        alert('Failed to save settings')
+        toast.error('Failed to save settings')
       }
     } catch (error) {
       console.error('Error saving settings:', error)
-      alert('Failed to save settings')
+      toast.error('Failed to save settings')
     } finally {
       setIsSaving(false)
     }

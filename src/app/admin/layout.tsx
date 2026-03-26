@@ -15,12 +15,13 @@ import {
   Menu,
   X,
   Shield,
-  UserCog
+  UserCog,
+  ExternalLink
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { Badge } from '@/components/ui/Badge'
+import { ToastProvider } from '@/components/ui/Toast'
 import type { UserRole } from '@/types'
 
 const ADMIN_NAV = [
@@ -83,9 +84,17 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Logo */}
-          <div className="hidden lg:flex items-center h-16 px-4 border-b border-border flex-shrink-0">
+          <div className="hidden lg:flex items-center justify-between h-16 px-4 border-b border-border flex-shrink-0">
             <Link href="/admin" className="font-display font-bold text-lg truncate">
               Archi<span className="text-accent">Core</span>
+            </Link>
+            <Link
+              href="/"
+              target="_blank"
+              className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title="View Site"
+            >
+              <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
           {/* Spacer for mobile */}
@@ -171,7 +180,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <AdminLayoutContent>{children}</AdminLayoutContent>
+      <ToastProvider>
+        <AdminLayoutContent>{children}</AdminLayoutContent>
+      </ToastProvider>
     </SessionProvider>
   )
 }

@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
+import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useToast } from '@/components/ui/Toast'
 import {
   Users,
   Plus,
@@ -49,6 +51,7 @@ const EMPTY_MEMBER: Partial<TeamMember> = {
 }
 
 export default function TeamPage() {
+  const toast = useToast()
   const [members, setMembers] = React.useState<TeamMember[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [editingMember, setEditingMember] = React.useState<Partial<TeamMember> | null>(null)
@@ -98,16 +101,17 @@ export default function TeamPage() {
       })
 
       if (response.ok) {
+        toast.success(isNew ? 'Team member added successfully!' : 'Team member updated successfully!')
         fetchMembers()
         setEditingMember(null)
         setIsCreating(false)
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to save team member')
+        toast.error(error.error || 'Failed to save team member')
       }
     } catch (error) {
       console.error('Error saving team member:', error)
-      alert('Failed to save team member')
+      toast.error('Failed to save team member')
     }
   }
 
@@ -121,9 +125,13 @@ export default function TeamPage() {
 
       if (response.ok) {
         setMembers(members.filter(m => m._id !== id))
+        toast.success('Team member deleted successfully!')
+      } else {
+        toast.error('Failed to delete team member')
       }
     } catch (error) {
       console.error('Error deleting team member:', error)
+      toast.error('Failed to delete team member')
     }
   }
 
@@ -205,15 +213,18 @@ export default function TeamPage() {
                 onChange={e => setEditingMember({ ...editingMember, email: e.target.value })}
                 placeholder="john@archicore.com"
               />
-              <Input
-                label="Image URL"
-                value={editingMember.image?.url || ''}
-                onChange={e => setEditingMember({
-                  ...editingMember,
-                  image: { url: e.target.value, publicId: editingMember.image?.publicId || '' }
-                })}
-                placeholder="https://..."
-              />
+              <div>
+                <label className="block text-sm font-medium mb-2">Profile Image</label>
+                <ImageUpload
+                  value={editingMember.image?.url}
+                  onChange={(url, publicId) => setEditingMember({
+                    ...editingMember,
+                    image: { url, publicId: publicId || '' }
+                  })}
+                  aspectRatio="square"
+                  placeholder="Upload profile photo"
+                />
+              </div>
             </div>
 
             <div className="flex gap-2">

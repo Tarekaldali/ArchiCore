@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { useToast } from '@/components/ui/Toast'
 import {
   Plus,
   Search,
@@ -16,6 +17,7 @@ import {
 import type { Project } from '@/types'
 
 export default function AdminProjectsPage() {
+  const toast = useToast()
   const [search, setSearch] = React.useState('')
   const [projects, setProjects] = React.useState<Project[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -53,13 +55,14 @@ export default function AdminProjectsPage() {
 
       if (response.ok) {
         setProjects(projects.filter(p => p._id?.toString() !== id))
+        toast.success('Project deleted successfully!')
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to delete project')
+        toast.error(error.error || 'Failed to delete project')
       }
     } catch (error) {
       console.error('Error deleting project:', error)
-      alert('Failed to delete project')
+      toast.error('Failed to delete project')
     }
   }
 

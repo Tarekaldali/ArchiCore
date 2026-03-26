@@ -10,11 +10,12 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
 import { contactSchema, type ContactInput } from '@/lib/validations'
 import { staggerContainer, staggerItem } from '@/constants/animations'
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react'
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isSuccess, setIsSuccess] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const {
     register,
@@ -27,6 +28,7 @@ export default function ContactPage() {
 
   const onSubmit = async (data: ContactInput) => {
     setIsSubmitting(true)
+    setError(null)
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -40,8 +42,8 @@ export default function ContactPage() {
       } else {
         throw new Error('Failed to submit')
       }
-    } catch (error) {
-      alert('Failed to send message. Please try again.')
+    } catch (err) {
+      setError('Failed to send message. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -104,6 +106,17 @@ export default function ContactPage() {
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3"
+                    >
+                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                      <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+                    </motion.div>
+                  )}
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <Input
                       label="Name *"
