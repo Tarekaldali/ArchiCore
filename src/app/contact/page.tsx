@@ -138,7 +138,7 @@ export default function ContactPage() {
                       label="Phone"
                       {...register('phone')}
                       error={errors.phone?.message}
-                      placeholder="+1 (234) 567-890"
+                      placeholder="+961 71 365 925"
                     />
                     <Input
                       label="Company"
@@ -195,8 +195,8 @@ export default function ContactPage() {
                       <p className="font-medium">Address</p>
                       <p className="text-muted-foreground text-sm">
                         123 Architecture Avenue<br />
-                        New York, NY 10001<br />
-                        United States
+                        Saida<br />
+                        Lebanon
                       </p>
                     </div>
                   </div>
@@ -208,10 +208,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium">Phone</p>
                       <a
-                        href="tel:+1234567890"
+                        href="tel:+96171365925"
                         className="text-muted-foreground text-sm hover:text-accent transition-colors"
                       >
-                        +1 (234) 567-890
+                        +961 71 365 925
                       </a>
                     </div>
                   </div>
