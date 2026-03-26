@@ -5,52 +5,8 @@ import Image from 'next/image'
 import { motion, useInView } from 'framer-motion'
 import { Badge } from '@/components/ui/Badge'
 import { staggerContainer, staggerItem } from '@/constants/animations'
-import { Linkedin, Twitter, Mail } from 'lucide-react'
-
-const TEAM_MEMBERS = [
-  {
-    name: 'Marcus Chen',
-    role: 'Principal Architect & Founder',
-    bio: 'With over 20 years of experience, Marcus leads ArchiCore with a vision for sustainable, human-centric design.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-    social: { linkedin: '#', twitter: '#', email: 'marcus@archicore.com' }
-  },
-  {
-    name: 'Sarah Walsh',
-    role: 'Design Director',
-    bio: 'Sarah brings 15 years of award-winning residential design experience to every project.',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
-    social: { linkedin: '#', twitter: '#', email: 'sarah@archicore.com' }
-  },
-  {
-    name: 'David Okonkwo',
-    role: 'Commercial Projects Lead',
-    bio: 'David specializes in large-scale commercial and mixed-use developments across Asia and Europe.',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
-    social: { linkedin: '#', twitter: '#', email: 'david@archicore.com' }
-  },
-  {
-    name: 'Elena Rodriguez',
-    role: 'Sustainability Consultant',
-    bio: 'Elena ensures all projects meet the highest environmental standards and certifications.',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
-    social: { linkedin: '#', twitter: '#', email: 'elena@archicore.com' }
-  },
-  {
-    name: 'James Rivera',
-    role: 'Urban Planning Specialist',
-    bio: 'James leads masterplanning initiatives that transform communities and create lasting impact.',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
-    social: { linkedin: '#', twitter: '#', email: 'james@archicore.com' }
-  },
-  {
-    name: 'Yuki Tanaka',
-    role: 'Interior Design Lead',
-    bio: 'Yuki creates interiors that seamlessly blend functionality with minimalist aesthetics.',
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-    social: { linkedin: '#', twitter: '#', email: 'yuki@archicore.com' }
-  }
-]
+import { Linkedin, Twitter, Mail, Loader2 } from 'lucide-react'
+import type { TeamMember } from '@/types'
 
 const AWARDS = [
   { year: 2024, title: 'AIA Honor Award', project: 'Azure Cliff Residence' },
@@ -70,6 +26,27 @@ export default function AboutPage() {
   const teamInView = useInView(teamRef, { once: true, margin: '-100px' })
   const valuesInView = useInView(valuesRef, { once: true, margin: '-100px' })
   const awardInView = useInView(awardRef, { once: true, margin: '-100px' })
+
+  const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const response = await fetch('/api/team')
+        const data = await response.json()
+        if (data.members) {
+          // Only show active team members
+          setTeamMembers(data.members.filter((m: TeamMember) => m.isActive))
+        }
+      } catch (error) {
+        console.error('Error fetching team:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchTeam()
+  }, [])
 
   return (
     <div className="min-h-screen pt-20">
@@ -208,57 +185,71 @@ export default function AboutPage() {
             </motion.h2>
           </motion.div>
 
-          <motion.div
-            variants={staggerContainer}
-            initial="initial"
-            animate={teamInView ? 'animate' : 'initial'}
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {TEAM_MEMBERS.map((member) => (
-              <motion.div
-                key={member.name}
-                variants={staggerItem}
-                className="bg-background rounded-lg overflow-hidden border border-border group"
-              >
-                <div className="relative aspect-[4/5] overflow-hidden">
-                  <Image
-                    src={member.image}
-                    alt={member.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-display font-semibold">{member.name}</h3>
-                  <p className="text-accent text-sm mb-2">{member.role}</p>
-                  <p className="text-muted-foreground text-sm mb-4">{member.bio}</p>
-                  <div className="flex gap-2">
-                    <a
-                      href={member.social.linkedin}
-                      className="p-2 rounded-full hover:bg-muted transition-colors"
-                      aria-label={`${member.name}'s LinkedIn`}
-                    >
-                      <Linkedin className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={member.social.twitter}
-                      className="p-2 rounded-full hover:bg-muted transition-colors"
-                      aria-label={`${member.name}'s Twitter`}
-                    >
-                      <Twitter className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`mailto:${member.social.email}`}
-                      className="p-2 rounded-full hover:bg-muted transition-colors"
-                      aria-label={`Email ${member.name}`}
-                    >
-                      <Mail className="w-4 h-4" />
-                    </a>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            </div>
+          ) : teamMembers.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">No team members found.</p>
+          ) : (
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              animate={teamInView ? 'animate' : 'initial'}
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {teamMembers.map((member) => (
+                <motion.div
+                  key={member._id?.toString()}
+                  variants={staggerItem}
+                  className="bg-background rounded-lg overflow-hidden border border-border group"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <Image
+                      src={member.image?.url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80'}
+                      alt={member.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-display font-semibold">{member.name}</h3>
+                    <p className="text-accent text-sm mb-2">{member.role}</p>
+                    <p className="text-muted-foreground text-sm mb-4">{member.bio}</p>
+                    <div className="flex gap-2">
+                      {member.socialLinks?.linkedin && (
+                        <a
+                          href={member.socialLinks.linkedin}
+                          className="p-2 rounded-full hover:bg-muted transition-colors"
+                          aria-label={`${member.name}'s LinkedIn`}
+                        >
+                          <Linkedin className="w-4 h-4" />
+                        </a>
+                      )}
+                      {member.socialLinks?.twitter && (
+                        <a
+                          href={member.socialLinks.twitter}
+                          className="p-2 rounded-full hover:bg-muted transition-colors"
+                          aria-label={`${member.name}'s Twitter`}
+                        >
+                          <Twitter className="w-4 h-4" />
+                        </a>
+                      )}
+                      {member.email && (
+                        <a
+                          href={`mailto:${member.email}`}
+                          className="p-2 rounded-full hover:bg-muted transition-colors"
+                          aria-label={`Email ${member.name}`}
+                        >
+                          <Mail className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
 

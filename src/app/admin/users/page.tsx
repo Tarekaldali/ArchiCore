@@ -113,35 +113,6 @@ export default function UsersManagementPage() {
         </Button>
       </div>
 
-      {/* Role legend */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-sm">Role Permissions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-3 gap-4 text-sm">
-            <div>
-              <Badge className={ROLE_COLORS.admin}>Admin</Badge>
-              <p className="text-muted-foreground mt-1">
-                Full access: create, edit, delete projects, manage users and team
-              </p>
-            </div>
-            <div>
-              <Badge className={ROLE_COLORS.editor}>Editor</Badge>
-              <p className="text-muted-foreground mt-1">
-                Can create and edit projects, view messages
-              </p>
-            </div>
-            <div>
-              <Badge className={ROLE_COLORS.viewer}>Viewer</Badge>
-              <p className="text-muted-foreground mt-1">
-                Read-only access to dashboard and projects
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Users table */}
       <Card>
         <CardHeader>

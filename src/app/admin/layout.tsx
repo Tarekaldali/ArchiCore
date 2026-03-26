@@ -81,9 +81,15 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Logo */}
-          
+          <div className="hidden lg:flex items-center h-16 px-4 border-b border-border flex-shrink-0">
+            <Link href="/admin" className="font-display font-bold text-lg truncate">
+              Archi<span className="text-accent">Core</span>
+            </Link>
+          </div>
+          {/* Spacer for mobile */}
+          <div className="h-16 lg:hidden flex-shrink-0" />
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -135,7 +141,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={() => signOut({ callbackUrl: '/admin/login' })}
+              onClick={() => signOut({ callbackUrl: '/login' })}
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
