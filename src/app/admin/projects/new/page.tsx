@@ -87,13 +87,26 @@ export default function NewProjectPage() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
-      // In production, this would make an API call
-      console.log('Submitting project:', data)
-      alert('Project created successfully! (Demo mode)')
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create project')
+      }
+
+      // Success - redirect to projects list
       router.push('/admin/projects')
+      router.refresh()
     } catch (error) {
       console.error('Error creating project:', error)
-      alert('Failed to create project')
+      alert(error instanceof Error ? error.message : 'Failed to create project')
     } finally {
       setIsSubmitting(false)
     }

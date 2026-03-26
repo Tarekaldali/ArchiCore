@@ -1,5 +1,33 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
+import { connectToDatabase } from './mongodb'
+import type { User, UserRole } from '@/types'
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name: string
+      role: UserRole
+      image?: string
+    }
+  }
+  interface User {
+    id: string
+    email: string
+    name: string
+    role: UserRole
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string
+    role: UserRole
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,35 +42,51 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Please enter email and password')
         }
 
-        const adminEmail = process.env.ADMIN_EMAIL
-        const adminPassword = process.env.ADMIN_PASSWORD
+        try {
+          const db = await connectToDatabase()
+          const usersCollection = db.collection<User>('users')
 
-        if (!adminEmail || !adminPassword) {
-          throw new Error('Admin credentials not configured')
-        }
+          // Find user by email
+          const user = await usersCollection.findOne({
+            email: credentials.email.toLowerCase()
+          })
 
-        if (credentials.email !== adminEmail) {
-          throw new Error('Invalid credentials')
-        }
+          if (!user) {
+            throw new Error('Invalid credentials')
+          }
 
-        const isValidPassword = credentials.password === adminPassword
+          if (!user.isActive) {
+            throw new Error('Account is disabled')
+          }
 
-        if (!isValidPassword) {
-          throw new Error('Invalid credentials')
-        }
+          // Verify password
+          const isValidPassword = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
 
-        return {
-          id: '1',
-          email: adminEmail,
-          name: 'Admin',
-          role: 'admin'
+          if (!isValidPassword) {
+            throw new Error('Invalid credentials')
+          }
+
+          return {
+            id: user._id!.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role
+          }
+        } catch (error) {
+          if (error instanceof Error) {
+            throw error
+          }
+          throw new Error('Authentication failed')
         }
       }
     })
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60,
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
     signIn: '/admin/login',
@@ -51,16 +95,28 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = 'admin'
+        token.id = user.id
+        token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { role?: string }).role = token.role as string
+        session.user.id = token.id
+        session.user.role = token.role
       }
       return session
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
+}
+
+// Helper function to check if user has permission
+export function checkPermission(role: UserRole, permission: string): boolean {
+  const permissions: Record<UserRole, string[]> = {
+    admin: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_team'],
+    editor: ['create', 'read', 'update'],
+    viewer: ['read'],
+  }
+  return permissions[role]?.includes(permission) || false
 }
