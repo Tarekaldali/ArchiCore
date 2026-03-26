@@ -97,25 +97,10 @@ export default function SettingsPage() {
           <h1 className="text-3xl font-display font-bold">Settings</h1>
           <p className="text-muted-foreground mt-1">Manage your site configuration</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchSettings} variant="outline" disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button onClick={saveSettings} disabled={isSaving}>
-            {saved ? (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Saved!
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </>
-            )}
-          </Button>
-        </div>
+        <Button onClick={fetchSettings} variant="outline" disabled={isLoading}>
+          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       <div className="space-y-6">
@@ -210,6 +195,23 @@ export default function SettingsPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Save Button at the bottom */}
+        <div className="flex justify-end">
+          <Button onClick={saveSettings} disabled={isSaving} size="lg">
+            {saved ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Saved!
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   )

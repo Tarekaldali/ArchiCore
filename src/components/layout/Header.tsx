@@ -17,6 +17,10 @@ function HeaderContent() {
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
 
+  // Don't show header on admin pages or login page
+  const isAdminPage = pathname?.startsWith('/admin')
+  const isLoginPage = pathname === '/login'
+
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
@@ -32,6 +36,11 @@ function HeaderContent() {
 
   const handleLogout = () => {
     signOut({ callbackUrl: '/login' })
+  }
+
+  // Hide header on admin and login pages
+  if (isAdminPage || isLoginPage) {
+    return null
   }
 
   return (

@@ -1,9 +1,21 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { NAV_LINKS } from '@/constants/navigation'
 import { Instagram, Linkedin, Twitter, Mail, MapPin, Phone } from 'lucide-react'
 
 export function Footer() {
+  const pathname = usePathname()
   const currentYear = new Date().getFullYear()
+
+  // Don't show footer on admin pages or login page
+  const isAdminPage = pathname?.startsWith('/admin')
+  const isLoginPage = pathname === '/login'
+
+  if (isAdminPage || isLoginPage) {
+    return null
+  }
 
   return (
     <footer className="bg-muted border-t border-border">
