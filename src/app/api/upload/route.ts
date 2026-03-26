@@ -1,33 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { v2 as cloudinary } from 'cloudinary'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
+import { connectToDatabase } from '@/lib/mongodb'
+import { ObjectId } from 'mongodb'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions)
-    if (!session || !['admin', 'editor'].includes(session.user.role)) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_CLOUD_NAME ||
-        !process.env.CLOUDINARY_API_KEY ||
-        !process.env.CLOUDINARY_API_SECRET) {
+    const canUpload = session.user.permissions?.some((permission) =>
+      ['manage_projects', 'manage_team', 'manage_blogs', 'manage_news', 'manage_services', 'manage_content'].includes(permission)
+    )
+
+    if (!canUpload) {
       return NextResponse.json(
-        { error: 'Cloudinary is not configured. Please add your Cloudinary credentials to .env file.' },
-        { status: 500 }
+        { error: 'Forbidden - Missing upload permission' },
+        { status: 403 }
       )
     }
 
@@ -49,34 +43,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    // Store in MongoDB as base64 data URL, keep size conservative
+    if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'File must be less than 10MB' },
+        { error: 'File must be less than 5MB' },
         { status: 400 }
       )
     }
 
-    // Convert file to base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
+    const dataUrl = `data:${file.type};base64,${buffer.toString('base64')}`
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(base64, {
-      folder: 'archicore',
-      resource_type: 'image',
-      transformation: [
-        { quality: 'auto:good' },
-        { fetch_format: 'auto' }
-      ]
+    const db = await connectToDatabase()
+    const mediaResult = await db.collection('media').insertOne({
+      fileName: file.name,
+      mimeType: file.type,
+      size: file.size,
+      dataUrl,
+      createdBy: session.user.id,
+      createdAt: new Date(),
     })
 
     return NextResponse.json({
-      url: result.secure_url,
-      publicId: result.public_id,
-      width: result.width,
-      height: result.height,
+      url: dataUrl,
+      publicId: mediaResult.insertedId.toString(),
     })
   } catch (error) {
     console.error('Upload error:', error)
@@ -87,12 +78,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Delete image from Cloudinary
 export async function DELETE(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'admin') {
+    const canDelete = session?.user.permissions?.some((permission) =>
+      ['manage_projects', 'manage_team', 'manage_blogs', 'manage_news', 'manage_services', 'manage_content'].includes(permission)
+    )
+
+    if (!session || !canDelete) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -108,7 +101,10 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await cloudinary.uploader.destroy(publicId)
+    const db = await connectToDatabase()
+    if (ObjectId.isValid(publicId)) {
+      await db.collection('media').deleteOne({ _id: new ObjectId(publicId) })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

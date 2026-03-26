@@ -16,27 +16,38 @@ import {
   X,
   Shield,
   UserCog,
-  ExternalLink
+  ExternalLink,
+  Newspaper,
+  BookOpen,
+  Briefcase,
+  KeyRound,
+  Inbox
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { ToastProvider } from '@/components/ui/Toast'
-import type { UserRole } from '@/types'
+import type { Permission, UserRole } from '@/types'
 
 const ADMIN_NAV = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'editor', 'viewer'] },
-  { href: '/admin/projects', label: 'Projects', icon: FolderKanban, roles: ['admin', 'editor', 'viewer'] },
-  { href: '/admin/team', label: 'Team', icon: Users, roles: ['admin'] },
-  { href: '/admin/messages', label: 'Messages', icon: MessageSquare, roles: ['admin', 'editor', 'viewer'] },
-  { href: '/admin/users', label: 'Users', icon: UserCog, roles: ['admin'] },
-  { href: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, permission: 'view_dashboard' as Permission },
+  { href: '/admin/projects', label: 'Projects', icon: FolderKanban, permission: 'manage_projects' as Permission },
+  { href: '/admin/services', label: 'Services', icon: Briefcase, permission: 'manage_services' as Permission },
+  { href: '/admin/blogs', label: 'Blogs', icon: BookOpen, permission: 'manage_blogs' as Permission },
+  { href: '/admin/news', label: 'News', icon: Newspaper, permission: 'manage_news' as Permission },
+  { href: '/admin/team', label: 'Team', icon: Users, permission: 'manage_team' as Permission },
+  { href: '/admin/messages', label: 'Messages', icon: MessageSquare, permission: 'view_messages' as Permission },
+  { href: '/admin/submissions', label: 'Submissions', icon: Inbox, permission: 'view_submissions' as Permission },
+  { href: '/admin/users', label: 'Users', icon: UserCog, permission: 'manage_users' as Permission },
+  { href: '/admin/roles', label: 'Roles', icon: KeyRound, permission: 'manage_roles' as Permission },
+  { href: '/admin/settings', label: 'Settings', icon: Settings, permission: 'manage_settings' as Permission },
 ]
 
-const ROLE_COLORS: Record<UserRole, string> = {
+const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   editor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   viewer: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  default: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
 }
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
@@ -45,10 +56,11 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
 
   const userRole = (session?.user?.role as UserRole) || 'viewer'
+  const userPermissions = session?.user?.permissions || []
 
-  // Filter nav items based on user role
+  // Filter nav items based on permissions
   const filteredNav = ADMIN_NAV.filter(item =>
-    item.roles.includes(userRole)
+    userPermissions.includes(item.permission)
   )
 
   // Don't show layout on login page
@@ -137,7 +149,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     'text-xs px-2 py-0.5 rounded-full capitalize',
-                    ROLE_COLORS[userRole]
+                    ROLE_COLORS[userRole] || ROLE_COLORS.default
                   )}>
                     {userRole}
                   </span>

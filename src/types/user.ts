@@ -1,6 +1,7 @@
-import { ObjectId } from 'mongodb'
+import type { ObjectId } from 'mongodb'
+import { Permission } from './role'
 
-export type UserRole = 'admin' | 'editor' | 'viewer'
+export type UserRole = 'admin' | 'editor' | 'viewer' | string
 
 export interface User {
   _id?: ObjectId
@@ -8,6 +9,7 @@ export interface User {
   password: string
   name: string
   role: UserRole
+  permissions?: Permission[]
   image?: string
   isActive: boolean
   createdAt: Date
@@ -19,42 +21,6 @@ export interface UserSession {
   email: string
   name: string
   role: UserRole
+  permissions?: Permission[]
   image?: string
-}
-
-// Role permissions
-export const ROLE_PERMISSIONS = {
-  admin: {
-    canCreateProject: true,
-    canEditProject: true,
-    canDeleteProject: true,
-    canManageUsers: true,
-    canManageTeam: true,
-    canViewMessages: true,
-    canAccessAdmin: true,
-  },
-  editor: {
-    canCreateProject: true,
-    canEditProject: true,
-    canDeleteProject: false,
-    canManageUsers: false,
-    canManageTeam: false,
-    canViewMessages: true,
-    canAccessAdmin: true,
-  },
-  viewer: {
-    canCreateProject: false,
-    canEditProject: false,
-    canDeleteProject: false,
-    canManageUsers: false,
-    canManageTeam: false,
-    canViewMessages: true,
-    canAccessAdmin: true,
-  },
-} as const
-
-export type Permission = keyof typeof ROLE_PERMISSIONS.admin
-
-export function hasPermission(role: UserRole, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[role][permission]
 }

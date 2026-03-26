@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { connectToDatabase } from '@/lib/mongodb'
 import { z } from 'zod'
-import type { User } from '@/types'
+import type { Role, User } from '@/types'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.string().optional(),
+  isActive: z.boolean().optional(),
 })
 
-// POST - Register new user
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -31,16 +34,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
+    const requestedRole = (validated.role || 'viewer').trim().toLowerCase()
+    const canManageUsers = !!(await getServerSession(authOptions))?.user.permissions?.includes('manage_users')
+
+    // Public registration can only create viewer accounts.
+    if (!canManageUsers && requestedRole !== 'viewer') {
+      return NextResponse.json(
+        { error: 'You are not allowed to create this role' },
+        { status: 403 }
+      )
+    }
+
+    const rolesCollection = db.collection<Role>('roles')
+    const roleExists =
+      ['admin', 'editor', 'viewer'].includes(requestedRole) ||
+      !!(await rolesCollection.findOne({ name: requestedRole }))
+
+    if (!roleExists) {
+      return NextResponse.json(
+        { error: 'Selected role does not exist' },
+        { status: 400 }
+      )
+    }
+
     const hashedPassword = await bcrypt.hash(validated.password, 12)
 
-    // Create user with viewer role by default
     const newUser: Omit<User, '_id'> = {
       name: validated.name,
       email: validated.email.toLowerCase(),
       password: hashedPassword,
-      role: 'viewer', // Default role, admin can upgrade
-      isActive: true,
+      role: requestedRole,
+      isActive: typeof validated.isActive === 'boolean' ? validated.isActive : true,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -66,7 +90,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Get all users (admin only)
 export async function GET(request: NextRequest) {
   try {
     const db = await connectToDatabase()

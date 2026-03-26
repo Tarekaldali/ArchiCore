@@ -1,8 +1,8 @@
-import { ObjectId } from 'mongodb'
+import type { ObjectId } from 'mongodb'
 
 export interface ProjectImage {
   url: string
-  publicId: string
+  publicId?: string
   alt: string
   isPrimary: boolean
 }

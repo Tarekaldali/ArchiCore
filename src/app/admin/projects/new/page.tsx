@@ -130,7 +130,8 @@ export default function NewProjectPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create project')
+        const details = Array.isArray(result.details) ? result.details[0]?.message : null
+        throw new Error(details ? `${result.error}: ${details}` : (result.error || 'Failed to create project'))
       }
 
       toast.success('Project created successfully!')

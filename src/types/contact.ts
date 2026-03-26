@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb'
+import type { ObjectId } from 'mongodb'
 
 export type ContactStatus = 'new' | 'read' | 'replied' | 'archived'
 export type ProjectTypeOption = 'residential' | 'commercial' | 'urban' | 'interior' | 'other'

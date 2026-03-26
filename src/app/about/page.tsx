@@ -29,23 +29,40 @@ export default function AboutPage() {
 
   const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [aboutContent, setAboutContent] = React.useState({
+    heroTitle: "Crafting Tomorrow's Architecture Today",
+    heroText:
+      'Founded in 2010, ArchiCore has grown from a small studio into an internationally recognized architecture practice.',
+  })
 
   React.useEffect(() => {
-    const fetchTeam = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/team')
-        const data = await response.json()
-        if (data.members) {
+        const [teamResponse, contentResponse] = await Promise.all([
+          fetch('/api/team'),
+          fetch('/api/content?key=about'),
+        ])
+        const teamData = await teamResponse.json()
+        const contentData = await contentResponse.json()
+
+        if (teamData.members) {
           // Only show active team members
-          setTeamMembers(data.members.filter((m: TeamMember) => m.isActive))
+          setTeamMembers(teamData.members.filter((m: TeamMember) => m.isActive))
+        }
+
+        if (contentData?.value) {
+          setAboutContent((prev) => ({
+            ...prev,
+            ...contentData.value,
+          }))
         }
       } catch (error) {
-        console.error('Error fetching team:', error)
+        console.error('Error fetching about page data:', error)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchTeam()
+    fetchData()
   }, [])
 
   return (
@@ -70,16 +87,13 @@ export default function AboutPage() {
                 variants={staggerItem}
                 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6"
               >
-                Crafting Tomorrow&apos;s <span className="text-accent">Architecture</span> Today
+                {aboutContent.heroTitle}
               </motion.h1>
               <motion.p
                 variants={staggerItem}
                 className="text-lg text-muted-foreground leading-relaxed mb-6"
               >
-                Founded in 2010, ArchiCore has grown from a small studio into an internationally
-                recognized architecture practice. Our multidisciplinary team of 50+ architects,
-                designers, and sustainability experts work together to create spaces that inspire,
-                endure, and respect our environment.
+                {aboutContent.heroText}
               </motion.p>
               <motion.p
                 variants={staggerItem}

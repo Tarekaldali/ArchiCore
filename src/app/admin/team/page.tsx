@@ -50,6 +50,13 @@ const EMPTY_MEMBER: Partial<TeamMember> = {
   isActive: true
 }
 
+function createInitialAvatar(name: string): string {
+  const safeName = (name || 'Team').trim()
+  const initial = safeName.charAt(0).toUpperCase() || 'T'
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='#e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='120' fill='#4b5563'>${initial}</text></svg>`
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
 export default function TeamPage() {
   const toast = useToast()
   const [members, setMembers] = React.useState<TeamMember[]>([])
@@ -89,7 +96,7 @@ export default function TeamPage() {
         ...editingMember,
         order: editingMember.order || members.length,
         image: editingMember.image?.url ? editingMember.image : {
-          url: `https://ui-avatars.com/api/?name=${encodeURIComponent(editingMember.name || 'T')}&background=random`,
+          url: createInitialAvatar(editingMember.name || 'Team'),
           publicId: `avatar_${Date.now()}`
         }
       }

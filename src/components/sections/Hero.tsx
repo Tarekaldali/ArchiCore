@@ -8,7 +8,17 @@ import { Button } from '@/components/ui/Button'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { fadeInUp, staggerContainer, staggerItem } from '@/constants/animations'
 
-export function Hero() {
+interface HeroProps {
+  badge?: string
+  title?: string
+  subtitle?: string
+}
+
+export function Hero({ badge, title, subtitle }: HeroProps) {
+  const heroBadge = badge || 'Award-Winning Architecture Studio'
+  const heroTitle = title || 'Designing Spaces That Inspire and Endure'
+  const heroSubtitle = subtitle || 'We create architectural masterpieces that blend innovation with timeless elegance, transforming visions into extraordinary living and working environments.'
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -31,29 +41,26 @@ export function Hero() {
           animate="animate"
           className="max-w-4xl"
         >
-          <motion.p
-            variants={staggerItem}
-            className="text-accent font-medium tracking-widest uppercase mb-4"
-          >
-            Award-Winning Architecture Studio
-          </motion.p>
+            <motion.p
+              variants={staggerItem}
+              className="text-accent font-medium tracking-widest uppercase mb-4"
+            >
+              {heroBadge}
+            </motion.p>
 
-          <motion.h1
-            variants={staggerItem}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6"
-          >
-            Designing Spaces That{' '}
-            <span className="text-accent">Inspire</span> and{' '}
-            <span className="text-accent">Endure</span>
-          </motion.h1>
+            <motion.h1
+              variants={staggerItem}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6"
+            >
+              {heroTitle}
+            </motion.h1>
 
-          <motion.p
-            variants={staggerItem}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8"
-          >
-            We create architectural masterpieces that blend innovation with timeless elegance,
-            transforming visions into extraordinary living and working environments.
-          </motion.p>
+            <motion.p
+              variants={staggerItem}
+              className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8"
+            >
+              {heroSubtitle}
+            </motion.p>
 
           <motion.div
             variants={staggerItem}

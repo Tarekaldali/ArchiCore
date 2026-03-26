@@ -43,9 +43,9 @@ export function ImageUpload({
       return
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Image must be less than 10MB')
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB')
       return
     }
 
@@ -146,7 +146,7 @@ export function ImageUpload({
             <>
               <ImageIcon className="w-8 h-8 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{placeholder}</span>
-              <span className="text-xs text-muted-foreground">PNG, JPG up to 10MB</span>
+              <span className="text-xs text-muted-foreground">PNG, JPG up to 5MB</span>
             </>
           )}
         </button>

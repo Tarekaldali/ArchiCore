@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { connectToDatabase } from '@/lib/mongodb'
-import type { User, UserRole } from '@/types'
+import type { Permission, Role, User } from '@/types'
 
 // GET - Get single user (exclude password)
 export async function GET(
@@ -41,21 +41,42 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json()
-    const { role, isActive } = body
+    const { role, isActive, permissions } = body as {
+      role?: string
+      isActive?: boolean
+      permissions?: Permission[]
+    }
 
     const db = await connectToDatabase()
     const usersCollection = db.collection<User>('users')
+    const rolesCollection = db.collection<Role>('roles')
 
     const updateData: Partial<User> = {
       updatedAt: new Date(),
     }
 
-    if (role && ['admin', 'editor', 'viewer'].includes(role)) {
-      updateData.role = role as UserRole
+    if (role) {
+      const normalizedRole = role.trim().toLowerCase()
+      const roleExists =
+        ['admin', 'editor', 'viewer'].includes(normalizedRole) ||
+        !!(await rolesCollection.findOne({ name: normalizedRole }))
+
+      if (!roleExists) {
+        return NextResponse.json(
+          { error: 'Selected role does not exist' },
+          { status: 400 }
+        )
+      }
+
+      updateData.role = normalizedRole
     }
 
     if (typeof isActive === 'boolean') {
       updateData.isActive = isActive
+    }
+
+    if (Array.isArray(permissions)) {
+      updateData.permissions = permissions
     }
 
     const result = await usersCollection.updateOne(

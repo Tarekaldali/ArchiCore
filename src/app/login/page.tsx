@@ -24,10 +24,9 @@ function LoginForm() {
   // Redirect if already logged in based on role
   React.useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      const role = session.user.role
       if (callbackUrl) {
         router.push(callbackUrl)
-      } else if (role === 'admin' || role === 'editor') {
+      } else if (session.user.permissions?.includes('view_dashboard')) {
         router.push('/admin')
       } else {
         router.push('/')
@@ -56,10 +55,9 @@ function LoginForm() {
         const sessionData = await sessionRes.json()
 
         if (sessionData?.user) {
-          const role = sessionData.user.role
           if (callbackUrl) {
             router.push(callbackUrl)
-          } else if (role === 'admin' || role === 'editor') {
+          } else if (sessionData.user.permissions?.includes('view_dashboard')) {
             router.push('/admin')
           } else {
             router.push('/')

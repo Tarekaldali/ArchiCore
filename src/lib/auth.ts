@@ -2,7 +2,8 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { connectToDatabase } from './mongodb'
-import type { User, UserRole } from '@/types'
+import type { Permission, Role, User, UserRole } from '@/types'
+import { normalizePermissions, permissionsForRole } from './rbac'
 
 declare module 'next-auth' {
   interface Session {
@@ -11,6 +12,7 @@ declare module 'next-auth' {
       email: string
       name: string
       role: UserRole
+      permissions: Permission[]
       image?: string
     }
   }
@@ -19,6 +21,7 @@ declare module 'next-auth' {
     email: string
     name: string
     role: UserRole
+    permissions: Permission[]
   }
 }
 
@@ -26,6 +29,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string
     role: UserRole
+    permissions: Permission[]
   }
 }
 
@@ -45,8 +49,8 @@ export const authOptions: NextAuthOptions = {
         try {
           const db = await connectToDatabase()
           const usersCollection = db.collection<User>('users')
+          const rolesCollection = db.collection<Role>('roles')
 
-          // Find user by email
           const user = await usersCollection.findOne({
             email: credentials.email.toLowerCase()
           })
@@ -59,7 +63,6 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Account is disabled')
           }
 
-          // Verify password
           const isValidPassword = await bcrypt.compare(
             credentials.password,
             user.password
@@ -69,11 +72,16 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Invalid credentials')
           }
 
+          const roleRecord = await rolesCollection.findOne({ name: user.role })
+          const rolePermissions = roleRecord?.permissions || permissionsForRole(user.role)
+          const permissions = normalizePermissions(rolePermissions, user.permissions || [])
+
           return {
             id: user._id!.toString(),
             email: user.email,
             name: user.name,
-            role: user.role
+            role: user.role,
+            permissions,
           }
         } catch (error) {
           if (error instanceof Error) {
@@ -97,13 +105,20 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.permissions = user.permissions
+      }
+      if (!token.permissions) {
+        token.permissions = permissionsForRole(token.role as UserRole)
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id
-        session.user.role = token.role
+        session.user.role = token.role as UserRole
+        session.user.permissions = Array.isArray(token.permissions)
+          ? token.permissions as Permission[]
+          : permissionsForRole(token.role as UserRole)
       }
       return session
     }
@@ -111,12 +126,11 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 }
 
-// Helper function to check if user has permission
-export function checkPermission(role: UserRole, permission: string): boolean {
-  const permissions: Record<UserRole, string[]> = {
-    admin: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_team'],
-    editor: ['create', 'read', 'update'],
-    viewer: ['read'],
-  }
-  return permissions[role]?.includes(permission) || false
+export function checkPermission(
+  role: UserRole,
+  permission: Permission,
+  directPermissions: Permission[] = []
+): boolean {
+  const mergedPermissions = normalizePermissions(permissionsForRole(role), directPermissions)
+  return mergedPermissions.includes(permission)
 }

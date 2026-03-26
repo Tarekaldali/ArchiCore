@@ -41,7 +41,7 @@ export default function MessagesPage() {
   const [filter, setFilter] = React.useState('all')
   const [selectedMessage, setSelectedMessage] = React.useState<Message | null>(null)
 
-  const fetchMessages = async () => {
+  const fetchMessages = React.useCallback(async () => {
     setIsLoading(true)
     try {
       const params = filter !== 'all' ? `?status=${filter}` : ''
@@ -55,11 +55,11 @@ export default function MessagesPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [filter])
 
   React.useEffect(() => {
     fetchMessages()
-  }, [filter])
+  }, [fetchMessages])
 
   const updateStatus = async (id: string, status: string) => {
     try {

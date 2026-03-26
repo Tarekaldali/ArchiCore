@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Calendar, User, Ruler } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ProjectGallery } from '@/components/projects/ProjectGallery'
+import { ProjectInterestForm } from '@/components/projects/ProjectInterestForm'
 import { connectToDatabase } from '@/lib/mongodb'
 import type { Project } from '@/types'
 
@@ -193,6 +194,12 @@ export default async function ProjectDetailPage({ params }: Props) {
                   <Link href="/contact">Get in Touch</Link>
                 </Button>
               </div>
+
+              <ProjectInterestForm
+                projectId={project._id?.toString()}
+                projectSlug={project.slug}
+                projectTitle={project.title}
+              />
             </div>
           </div>
         </div>

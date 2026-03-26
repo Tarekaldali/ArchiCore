@@ -97,7 +97,7 @@ function HeaderContent() {
               ) : session?.user ? (
                 <div className="flex items-center space-x-2">
                   {/* Admin link for admin/editor */}
-                  {(session.user.role === 'admin' || session.user.role === 'editor') && (
+                  {session.user.permissions?.includes('view_dashboard') && (
                     <Link
                       href="/admin"
                       className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md hover:bg-muted transition-colors"
@@ -171,7 +171,7 @@ function HeaderContent() {
               <div className="border-t border-border pt-2 mt-2">
                 {session?.user ? (
                   <>
-                    {(session.user.role === 'admin' || session.user.role === 'editor') && (
+                    {session.user.permissions?.includes('view_dashboard') && (
                       <Link
                         href="/admin"
                         className="flex items-center gap-2 py-2 px-4 rounded-md text-base font-medium hover:bg-muted transition-colors"
