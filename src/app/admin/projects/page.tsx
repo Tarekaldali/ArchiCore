@@ -5,85 +5,71 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
-import { useToast } from '@/components/ui/Toast'
 import {
   Plus,
   Search,
   Edit,
   Trash2,
   Eye,
-  RefreshCw
+  MoreHorizontal
 } from 'lucide-react'
 import type { Project } from '@/types'
 
+// Sample projects for display
+const SAMPLE_PROJECTS: Partial<Project>[] = [
+  {
+    _id: '1',
+    slug: 'azure-cliff-residence',
+    title: 'Azure Cliff Residence',
+    category: 'residential',
+    status: 'published',
+    featured: true,
+    year: 2024,
+    createdAt: new Date('2024-01-15'),
+  },
+  {
+    _id: '2',
+    slug: 'vertex-tower',
+    title: 'Vertex Tower',
+    category: 'commercial',
+    status: 'published',
+    featured: true,
+    year: 2023,
+    createdAt: new Date('2024-01-10'),
+  },
+  {
+    _id: '3',
+    slug: 'minimalist-penthouse',
+    title: 'Minimalist Penthouse',
+    category: 'interior',
+    status: 'published',
+    featured: false,
+    year: 2024,
+    createdAt: new Date('2024-01-05'),
+  },
+  {
+    _id: '4',
+    slug: 'garden-district',
+    title: 'Garden District Masterplan',
+    category: 'urban',
+    status: 'draft',
+    featured: false,
+    year: 2023,
+    createdAt: new Date('2024-01-01'),
+  },
+]
+
 export default function AdminProjectsPage() {
-  const toast = useToast()
   const [search, setSearch] = React.useState('')
-  const [projects, setProjects] = React.useState<Project[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
-
-  const fetchProjects = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/projects?status=all')
-      const data = await response.json()
-      if (data.projects) {
-        setProjects(data.projects)
-      }
-    } catch (error) {
-      console.error('Error fetching projects:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  React.useEffect(() => {
-    fetchProjects()
-  }, [])
+  const [projects, setProjects] = React.useState(SAMPLE_PROJECTS)
 
   const filteredProjects = projects.filter(p =>
     p.title?.toLowerCase().includes(search.toLowerCase())
   )
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this project?')) return
-
-    try {
-      const response = await fetch(`/api/projects/${id}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        setProjects(projects.filter(p => p._id?.toString() !== id))
-        toast.success('Project deleted successfully!')
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to delete project')
-      }
-    } catch (error) {
-      console.error('Error deleting project:', error)
-      toast.error('Failed to delete project')
-    }
-  }
-
-  const toggleStatus = async (project: Project) => {
-    const newStatus = project.status === 'published' ? 'draft' : 'published'
-    try {
-      const response = await fetch(`/api/projects/${project._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      })
-
-      if (response.ok) {
-        setProjects(projects.map(p =>
-          p._id?.toString() === project._id?.toString()
-            ? { ...p, status: newStatus }
-            : p
-        ))
-      }
-    } catch (error) {
-      console.error('Error updating project:', error)
+    if (confirm('Are you sure you want to delete this project?')) {
+      setProjects(projects.filter(p => p._id !== id))
     }
   }
 
@@ -92,22 +78,14 @@ export default function AdminProjectsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-display font-bold">Projects</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your portfolio projects ({projects.length} total)
-          </p>
+          <p className="text-muted-foreground mt-1">Manage your portfolio projects</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchProjects} variant="outline" disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button asChild>
-            <Link href="/admin/projects/new">
-              <Plus className="w-4 h-4 mr-2" />
-              New Project
-            </Link>
-          </Button>
-        </div>
+        <Button asChild>
+          <Link href="/admin/projects/new">
+            <Plus className="w-4 h-4 mr-2" />
+            New Project
+          </Link>
+        </Button>
       </div>
 
       {/* Search */}
@@ -140,88 +118,69 @@ export default function AdminProjectsPage() {
                 <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">
                   Year
                 </th>
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">
-                  Location
-                </th>
                 <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+              {filteredProjects.map((project) => (
+                <tr key={project._id?.toString()} className="border-b border-border last:border-0 hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{project.title}</span>
+                      {project.featured && (
+                        <Badge variant="accent" className="text-xs">Featured</Badge>
+                      )}
+                    </div>
                   </td>
-                </tr>
-              ) : filteredProjects.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                    {search ? 'No projects match your search.' : 'No projects found. Create your first project!'}
+                  <td className="px-4 py-3">
+                    <Badge variant="secondary" className="capitalize">
+                      {project.category}
+                    </Badge>
                   </td>
-                </tr>
-              ) : (
-                filteredProjects.map((project) => (
-                  <tr key={project._id?.toString()} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{project.title}</span>
-                        {project.featured && (
-                          <Badge variant="accent" className="text-xs">Featured</Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant="secondary" className="capitalize">
-                        {project.category}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleStatus(project)}
-                        className="cursor-pointer"
+                  <td className="px-4 py-3">
+                    <Badge variant={project.status === 'published' ? 'success' : 'warning'}>
+                      {project.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {project.year}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button asChild variant="ghost" size="icon" title="View">
+                        <Link href={`/projects/${project.slug}`} target="_blank">
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                      </Button>
+                      <Button asChild variant="ghost" size="icon" title="Edit">
+                        <Link href={`/admin/projects/${project._id}/edit`}>
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Delete"
+                        onClick={() => handleDelete(project._id?.toString() || '')}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
-                        <Badge variant={project.status === 'published' ? 'default' : 'secondary'}>
-                          {project.status}
-                        </Badge>
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {project.year}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-sm">
-                      {project.location?.city}, {project.location?.country}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button asChild variant="ghost" size="icon" title="View">
-                          <Link href={`/projects/${project.slug}`} target="_blank">
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <Button asChild variant="ghost" size="icon" title="Edit">
-                          <Link href={`/admin/projects/${project._id}/edit`}>
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Delete"
-                          onClick={() => handleDelete(project._id?.toString() || '')}
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+
+        {filteredProjects.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No projects found.</p>
+          </div>
+        )}
       </div>
     </div>
   )

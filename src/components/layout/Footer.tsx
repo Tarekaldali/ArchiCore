@@ -1,21 +1,9 @@
-'use client'
-
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { NAV_LINKS } from '@/constants/navigation'
 import { Instagram, Linkedin, Twitter, Mail, MapPin, Phone } from 'lucide-react'
 
 export function Footer() {
-  const pathname = usePathname()
   const currentYear = new Date().getFullYear()
-
-  // Don't show footer on admin pages or login page
-  const isAdminPage = pathname?.startsWith('/admin')
-  const isLoginPage = pathname === '/login'
-
-  if (isAdminPage || isLoginPage) {
-    return null
-  }
 
   return (
     <footer className="bg-muted border-t border-border">
@@ -66,7 +54,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>saida jizeen street<br />Saida</span>
+                <span>123 Architecture Ave<br />New York, NY 10001</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 flex-shrink-0" />
@@ -76,8 +64,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 flex-shrink-0" />
-                <a href="tel:+96171365925" className="hover:text-accent transition-colors">
-                  +961 71 365 925
+                <a href="tel:+1234567890" className="hover:text-accent transition-colors">
+                  +1 (234) 567-890
                 </a>
               </li>
             </ul>

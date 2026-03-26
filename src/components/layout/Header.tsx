@@ -4,22 +4,15 @@ import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, LogIn, LogOut, User } from 'lucide-react'
-import { useSession, signOut } from 'next-auth/react'
-import { SessionProvider } from 'next-auth/react'
+import { Menu, X } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { NAV_LINKS } from '@/constants/navigation'
 import { cn } from '@/lib/utils'
 
-function HeaderContent() {
+export function Header() {
   const pathname = usePathname()
-  const { data: session, status } = useSession()
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
-
-  // Don't show header on admin pages or login page
-  const isAdminPage = pathname?.startsWith('/admin')
-  const isLoginPage = pathname === '/login'
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -33,15 +26,6 @@ function HeaderContent() {
   React.useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])
-
-  const handleLogout = () => {
-    signOut({ callbackUrl: '/login' })
-  }
-
-  // Hide header on admin and login pages
-  if (isAdminPage || isLoginPage) {
-    return null
-  }
 
   return (
     <header
@@ -87,43 +71,8 @@ function HeaderContent() {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <ThemeToggle />
-
-            {/* Auth buttons - Desktop */}
-            <div className="hidden md:flex items-center space-x-2">
-              {status === 'loading' ? (
-                <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
-              ) : session?.user ? (
-                <div className="flex items-center space-x-2">
-                  {/* Admin link for admin/editor */}
-                  {session.user.permissions?.includes('view_dashboard') && (
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md hover:bg-muted transition-colors"
-                    >
-                      <User className="w-4 h-4" />
-                      Dashboard
-                    </Link>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md hover:bg-muted transition-colors text-red-600 dark:text-red-400"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md hover:bg-muted transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Login
-                </Link>
-              )}
-            </div>
 
             {/* Mobile menu button */}
             <button
@@ -166,50 +115,10 @@ function HeaderContent() {
                   {link.label}
                 </Link>
               ))}
-
-              {/* Mobile Auth Links */}
-              <div className="border-t border-border pt-2 mt-2">
-                {session?.user ? (
-                  <>
-                    {session.user.permissions?.includes('view_dashboard') && (
-                      <Link
-                        href="/admin"
-                        className="flex items-center gap-2 py-2 px-4 rounded-md text-base font-medium hover:bg-muted transition-colors"
-                      >
-                        <User className="w-4 h-4" />
-                        Dashboard
-                      </Link>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 w-full py-2 px-4 rounded-md text-base font-medium hover:bg-muted transition-colors text-red-600 dark:text-red-400"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="flex items-center gap-2 py-2 px-4 rounded-md text-base font-medium hover:bg-muted transition-colors"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Login
-                  </Link>
-                )}
-              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </header>
-  )
-}
-
-export function Header() {
-  return (
-    <SessionProvider>
-      <HeaderContent />
-    </SessionProvider>
   )
 }

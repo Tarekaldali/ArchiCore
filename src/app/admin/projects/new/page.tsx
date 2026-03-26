@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { useToast } from '@/components/ui/Toast'
-import { ArrowLeft, Save, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Upload, X, Image as ImageIcon } from 'lucide-react'
 import { PROJECT_CATEGORIES, PROJECT_STATUS } from '@/constants/categories'
 import { projectSchema, type ProjectInput } from '@/lib/validations'
 import { slugify } from '@/lib/utils'
@@ -21,9 +20,7 @@ type FormData = z.infer<typeof projectSchema>
 
 export default function NewProjectPage() {
   const router = useRouter()
-  const toast = useToast()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [isUploading, setIsUploading] = React.useState(false)
   const [images, setImages] = React.useState<{ url: string; publicId: string; alt: string; isPrimary: boolean }[]>([])
 
   const {
@@ -55,46 +52,17 @@ export default function NewProjectPage() {
     const files = e.target.files
     if (!files) return
 
-    setIsUploading(true)
-    const newImages: { url: string; publicId: string; alt: string; isPrimary: boolean }[] = []
+    // For demo, we'll use placeholder URLs
+    // In production, this would upload to Cloudinary
+    const newImages = Array.from(files).map((file, index) => ({
+      url: URL.createObjectURL(file),
+      publicId: `temp_${Date.now()}_${index}`,
+      alt: file.name.replace(/\.[^/.]+$/, ''),
+      isPrimary: images.length === 0 && index === 0
+    }))
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      const formData = new FormData()
-      formData.append('file', file)
-
-      try {
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          newImages.push({
-            url: data.url,
-            publicId: data.publicId,
-            alt: file.name.replace(/\.[^/.]+$/, ''),
-            isPrimary: images.length === 0 && i === 0
-          })
-        } else {
-          const error = await response.json()
-          toast.error(error.error || `Failed to upload ${file.name}`)
-        }
-      } catch (error) {
-        toast.error(`Failed to upload ${file.name}`)
-      }
-    }
-
-    if (newImages.length > 0) {
-      const updatedImages = [...images, ...newImages]
-      setImages(updatedImages)
-      setValue('images', updatedImages)
-      toast.success(`${newImages.length} image(s) uploaded successfully!`)
-    }
-
-    setIsUploading(false)
-    e.target.value = '' // Reset input
+    setImages([...images, ...newImages])
+    setValue('images', [...images, ...newImages])
   }
 
   const removeImage = (index: number) => {
@@ -119,27 +87,13 @@ export default function NewProjectPage() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        const details = Array.isArray(result.details) ? result.details[0]?.message : null
-        throw new Error(details ? `${result.error}: ${details}` : (result.error || 'Failed to create project'))
-      }
-
-      toast.success('Project created successfully!')
+      // In production, this would make an API call
+      console.log('Submitting project:', data)
+      alert('Project created successfully! (Demo mode)')
       router.push('/admin/projects')
-      router.refresh()
     } catch (error) {
       console.error('Error creating project:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to create project')
+      alert('Failed to create project')
     } finally {
       setIsSubmitting(false)
     }
@@ -207,25 +161,15 @@ export default function NewProjectPage() {
               <CardContent>
                 <div className="space-y-4">
                   {/* Upload area */}
-                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-8 h-8 text-muted-foreground mb-2 animate-spin" />
-                        <span className="text-sm text-muted-foreground">Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">Click to upload images</span>
-                      </>
-                    )}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">Click to upload images</span>
                     <input
                       type="file"
                       accept="image/*"
                       multiple
                       className="hidden"
                       onChange={handleImageUpload}
-                      disabled={isUploading}
                     />
                   </label>
 

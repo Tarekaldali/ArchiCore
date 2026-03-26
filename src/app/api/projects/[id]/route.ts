@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { connectToDatabase } from '@/lib/mongodb'
 import { projectSchema } from '@/lib/validations'
+import { deleteImage } from '@/lib/cloudinary'
 import { z } from 'zod'
 
 interface RouteContext {
@@ -107,6 +108,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const { id } = context.params
     const db = await connectToDatabase()
 
+    // Get project to delete associated images
     const project = await db.collection('projects').findOne({
       _id: new ObjectId(id)
     })
@@ -118,6 +120,16 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       )
     }
 
+    // Delete images from Cloudinary
+    if (project.images && project.images.length > 0) {
+      const deletePromises = project.images
+        .filter((img: { publicId?: string }) => img.publicId)
+        .map((img: { publicId: string }) => deleteImage(img.publicId))
+
+      await Promise.allSettled(deletePromises)
+    }
+
+    // Delete project from database
     const result = await db.collection('projects').deleteOne({
       _id: new ObjectId(id)
     })

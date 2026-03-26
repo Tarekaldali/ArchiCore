@@ -14,26 +14,12 @@ export function formatDate(date: Date | string): string {
 }
 
 export function slugify(text: string): string {
-  const normalized = text
+  return text
     .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-
-  const safe = normalized
-    .split('')
-    .filter((char) => {
-      if (char === ' ' || char === '-') return true
-      if (/[a-z0-9]/.test(char)) return true
-      // Keep non-Latin letters while removing most symbols.
-      return char.toLowerCase() !== char.toUpperCase()
-    })
-    .join('')
-
-  return safe
+    .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/--+/g, '-')
     .trim()
-    .replace(/^-+|-+$/g, '')
 }
 
 export function truncate(text: string, length: number): string {

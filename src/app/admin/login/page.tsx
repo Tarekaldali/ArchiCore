@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
@@ -89,30 +88,15 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-background rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
-            <Link href="/" className="inline-block">
-              <h1 className="text-2xl font-display font-bold">
-                Archi<span className="text-accent">Core</span>
-              </h1>
-            </Link>
+            <h1 className="text-2xl font-display font-bold">
+              Archi<span className="text-accent">Core</span>
+            </h1>
             <p className="text-muted-foreground mt-2">Admin Dashboard</p>
           </div>
 
           <Suspense fallback={<div className="animate-pulse h-40 bg-muted rounded-md" />}>
             <LoginForm />
           </Suspense>
-
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Don&apos;t have an account? </span>
-            <Link href="/register" className="text-accent hover:underline">
-              Register
-            </Link>
-          </div>
-
-          <div className="mt-4 text-center">
-            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-              ← Back to website
-            </Link>
-          </div>
         </div>
       </div>
     </div>

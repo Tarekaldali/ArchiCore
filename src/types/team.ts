@@ -1,8 +1,8 @@
-import type { ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 
 export interface TeamMemberImage {
   url: string
-  publicId?: string
+  publicId: string
 }
 
 export interface SocialLinks {

@@ -5,16 +5,9 @@ import Image from 'next/image'
 import { motion, useInView } from 'framer-motion'
 import { fadeInUp, staggerContainer, staggerItem } from '@/constants/animations'
 
-interface BrandIntroProps {
-  title?: string
-  text?: string
-}
-
-export function BrandIntro({ title, text }: BrandIntroProps) {
+export function BrandIntro() {
   const ref = React.useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const introTitle = title || 'Where Vision Meets Architectural Excellence'
-  const introText = text || 'Founded in 2010, ArchiCore has established itself as a leading force in contemporary architecture. Our multidisciplinary team combines innovative design thinking with sustainable practices to create spaces that stand the test of time.'
 
   return (
     <section ref={ref} className="py-24 md:py-32 bg-muted/50">
@@ -38,14 +31,18 @@ export function BrandIntro({ title, text }: BrandIntroProps) {
               variants={staggerItem}
               className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-6"
             >
-              {introTitle}
+              Where Vision Meets{' '}
+              <span className="text-accent">Architectural Excellence</span>
             </motion.h2>
 
             <motion.p
               variants={staggerItem}
               className="text-muted-foreground text-lg leading-relaxed mb-6"
             >
-              {introText}
+              Founded in 2010, ArchiCore has established itself as a leading force in
+              contemporary architecture. Our multidisciplinary team combines innovative
+              design thinking with sustainable practices to create spaces that stand
+              the test of time.
             </motion.p>
 
             <motion.p

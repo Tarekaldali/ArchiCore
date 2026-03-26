@@ -1,78 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { connectToDatabase } from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+import { uploadImage, deleteImage } from '@/lib/cloudinary'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const canUpload = session.user.permissions?.some((permission) =>
-      ['manage_projects', 'manage_team', 'manage_blogs', 'manage_news', 'manage_services', 'manage_content'].includes(permission)
-    )
-
-    if (!canUpload) {
-      return NextResponse.json(
-        { error: 'Forbidden - Missing upload permission' },
-        { status: 403 }
-      )
-    }
-
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    const files = formData.getAll('files') as File[]
+    const folder = (formData.get('folder') as string) || 'archicore/projects'
 
-    if (!file) {
+    if (!files || files.length === 0) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        { error: 'No files provided' },
         { status: 400 }
       )
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json(
-        { error: 'File must be an image' },
-        { status: 400 }
-      )
-    }
-
-    // Store in MongoDB as base64 data URL, keep size conservative
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'File must be less than 5MB' },
-        { status: 400 }
-      )
-    }
-
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const dataUrl = `data:${file.type};base64,${buffer.toString('base64')}`
-
-    const db = await connectToDatabase()
-    const mediaResult = await db.collection('media').insertOne({
-      fileName: file.name,
-      mimeType: file.type,
-      size: file.size,
-      dataUrl,
-      createdBy: session.user.id,
-      createdAt: new Date(),
+    const uploadPromises = files.map(async (file) => {
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      return uploadImage(buffer, folder)
     })
+
+    const results = await Promise.all(uploadPromises)
 
     return NextResponse.json({
-      url: dataUrl,
-      publicId: mediaResult.insertedId.toString(),
+      images: results,
+      message: 'Images uploaded successfully'
     })
   } catch (error) {
-    console.error('Upload error:', error)
+    console.error('Error uploading images:', error)
     return NextResponse.json(
-      { error: 'Failed to upload image' },
+      { error: 'Failed to upload images' },
       { status: 500 }
     )
   }
@@ -80,35 +37,21 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    const canDelete = session?.user.permissions?.some((permission) =>
-      ['manage_projects', 'manage_team', 'manage_blogs', 'manage_news', 'manage_services', 'manage_content'].includes(permission)
-    )
-
-    if (!session || !canDelete) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { publicId } = await request.json()
+    const body = await request.json()
+    const { publicId } = body
 
     if (!publicId) {
       return NextResponse.json(
-        { error: 'No public ID provided' },
+        { error: 'Public ID is required' },
         { status: 400 }
       )
     }
 
-    const db = await connectToDatabase()
-    if (ObjectId.isValid(publicId)) {
-      await db.collection('media').deleteOne({ _id: new ObjectId(publicId) })
-    }
+    await deleteImage(publicId)
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ message: 'Image deleted successfully' })
   } catch (error) {
-    console.error('Delete error:', error)
+    console.error('Error deleting image:', error)
     return NextResponse.json(
       { error: 'Failed to delete image' },
       { status: 500 }

@@ -60,19 +60,37 @@ http://localhost:3000
 - `npm run build` - build the app for production
 - `npm run start` - run the production build
 - `npm run lint` - run ESLint
-- `npm run seed` - seed initial data
+- `npm run seed` - reset and seed initial data
+- `npm run seed -- --keep-existing` - add seed data without clearing existing records
+
+## Teacher Quick Start
+
+Use these commands on a fresh machine:
+
+```bash
+npm install
+copy .env.example .env
+# fill .env values (especially MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, NEXTAUTH_SECRET)
+npm run seed
+npm run dev
+```
 
 ## Seeding Data
 
-If you want initial sample data, run:
+`npm run seed` now populates:
 
-```bash
-npm run seed
-```
+- projects
+- team
+- services
+- blogs
+- news
+- default home/about content
+- default site settings
+
+If `.env` exists, the seed script auto-loads it.
 
 ## Notes
 
 - The app uses Next.js App Router.
 - Admin pages are available under `/admin`.
 - Public pages include home, about, services, projects, blog, news, and contact.
-
